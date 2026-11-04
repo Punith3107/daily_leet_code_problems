@@ -1,0 +1,38 @@
+class Solution:
+    def minOperations(self, nums, x, k):
+        from bisect import bisect_left
+        n=len(nums); p=sorted(set(nums)); m=len(p)
+        c=[0]*(m+1); s=[0]*(m+1); cost=[0]*(n-x+1)
+        def upd(t,i,v):
+            while i<=m:
+                t[i]+=v; i+=i&-i
+        def qry(t,i):
+            z=0
+            while i:
+                z+=t[i]; i-=i&-i
+            return z
+        step=1<<(m.bit_length()-1)
+        total=0
+        for i,v in enumerate(nums):
+            j=bisect_left(p,v)+1
+            upd(c,j,1); upd(s,j,v); total+=v
+            if i>=x:
+                v=nums[i-x]; j=bisect_left(p,v)+1
+                upd(c,j,-1); upd(s,j,-v); total-=v
+            if i>=x-1:
+                r=(x+1)//2; j=0; b=step
+                while b:
+                    t=j+b
+                    if t<=m and c[t]<r:
+                        r-=c[t]; j=t
+                    b//=2
+                med=p[j]; z=qry(c,j+1); sm=qry(s,j+1)
+                cost[i-x+1]=med*z-sm+total-sm-med*(x-z)
+        inf=10**18
+        dp=[0]*(n+1)
+        for _ in range(k):
+            nd=[inf]*(n+1)
+            for i in range(x,n+1):
+                nd[i]=min(nd[i-1],dp[i-x]+cost[i-x])
+            dp=nd
+        return dp[n]
